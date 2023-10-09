@@ -9,6 +9,7 @@ public class GameConfig {
     public static final float WORLD_HEIGHT = 10.0f;
     public static final float HUD_WIDTH = 480f;
     public static final float HUD_HEIGHT = 800f;
+    public static final float HUD_PADDING = 20f;
 
     // rotate around
     public static final float WORLD_CENTER_X = WORLD_WIDTH/2f;

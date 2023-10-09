@@ -92,7 +92,6 @@ public class GameScreen extends ScreenAdapter {
     //
     @Override
     public void render(float delta) {
-        update(delta);
 
         // handle debug camera input (all controls)
         debugCameraController.handleDebugInput(delta);
@@ -119,31 +118,6 @@ public class GameScreen extends ScreenAdapter {
 
     }
 
-    private void update(float delta) {
-        updatePlayer();
-    }
-
-    private void updatePlayer()
-    {
-        float xSpeed = 0;
-
-        if ( Gdx.input.isKeyPressed( Input.Keys.RIGHT)) {
-            xSpeed = MAX_PLAYER_SPEED;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            xSpeed = -MAX_PLAYER_SPEED;
-        }
-
-        player.setX (player.getX() + xSpeed);
-        blockPlayerFromLeavingTheWorld( );
-    }
-
-    private void blockPlayerFromLeavingTheWorld()
-    {
-        float playerX = MathUtils.clamp( player.getX( ), 0f ,
-                ( GameConfig.WORLD_WIDTH - GameConfig.PLAYER_SIZE ) );
-
-        player.setPosition( playerX, player.getY( ) );
-    }
 
 
     // Always necessary to update viewports with width and height

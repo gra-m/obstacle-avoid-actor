@@ -189,7 +189,7 @@ public class GameRendererOld implements Disposable
         drawDebug( );
 
         renderer.end( );
-        ViewportUtils.drawGrid( viewport, renderer );
+        ViewportUtils.drawGrid( viewport, renderer);
 
     }
 
@@ -198,10 +198,10 @@ public class GameRendererOld implements Disposable
         Player player = gameControllerOld.getPlayer();
         Array<Obstacle> obstacles = gameControllerOld.getObstacles();
 
-        player.drawDebug( renderer );
+        player.drawDebug(renderer);
 
         for ( Obstacle o : obstacles ) {
-            o.drawDebug( renderer );
+            o.drawDebug(renderer);
         }
     }
 

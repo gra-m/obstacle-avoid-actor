@@ -73,5 +73,7 @@ public abstract class ActorBase extends Actor {
         shapeRenderer.setColor(oldColor);
     }
 
-
+    public Circle getCollisionShape() {
+        return collisionShape;
+    }
 }

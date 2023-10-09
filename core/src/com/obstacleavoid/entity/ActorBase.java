@@ -1,5 +1,6 @@
 package com.obstacleavoid.entity;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -27,7 +28,7 @@ public abstract class ActorBase extends Actor {
     public void draw(Batch batch, float parentAlpha) {
         // Do not have to set projection matrix or begin/end since the stage handles these
         if (this.region == null) {
-            LOG.debug("Region not set on Actor");
+            LOG.debug("Region not set on Actor" + getClass().getName());
             return;
         }
 
@@ -65,8 +66,11 @@ public abstract class ActorBase extends Actor {
         if(!getDebug()) {
             return;
         }
+        Color oldColor = shapeRenderer.getColor().cpy();
+        shapeRenderer.setColor(Color.RED);
         shapeRenderer.x(collisionShape.x, collisionShape.y, 0.1f);
-        shapeRenderer.circle(collisionShape.x, collisionShape.y, collisionShape.radius);
+        shapeRenderer.circle(collisionShape.x, collisionShape.y, collisionShape.radius, 30);
+        shapeRenderer.setColor(oldColor);
     }
 
 

@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
@@ -97,10 +98,16 @@ public class GameScreen extends ScreenAdapter {
         debugCameraController.setStartPosition(GameConfig.WORLD_CENTER_X, GameConfig.WORLD_CENTER_Y);
         obstacleRegion = gamePlayAtlas.findRegion(RegionNames.OBSTACLE);
         backgroundRegion = gamePlayAtlas.findRegion(RegionNames.BACKGROUND);
-        // Actors
+
+        Image background = new Image(backgroundRegion);
+        background.setSize(GameConfig.WORLD_WIDTH, GameConfig.WORLD_HEIGHT);
+
+        //
+        // Player Actor
         player = new PlayerActor();
         player.setRegion(gamePlayAtlas.findRegion(RegionNames.PLAYER));
         player.setPosition(startPlayerX, startPlayerY);
+        gameStage.addActor(background);
         gameStage.addActor(player);
     }
 
@@ -201,14 +208,7 @@ public class GameScreen extends ScreenAdapter {
     private void renderGamePlay() {
         batch.setProjectionMatrix(camera.combined);
 
-        batch.begin();
-
-        //RENDER CALL 01:
-        batch.draw(backgroundRegion, 0, 0, GameConfig.WORLD_WIDTH, GameConfig.WORLD_HEIGHT);
-
-        batch.end();
-
-        // RENDER CALL 02: Stage calls its own begin/end automatically player and obstacles added to stage are added here
+        // just 1 render call
         gameStage.act();
         gameStage.draw();
 

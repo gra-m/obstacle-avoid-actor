@@ -269,6 +269,8 @@ public class GameScreen extends ScreenAdapter {
     // Game Logic (Now mixed in with rendering class);
 
     private void restart() {
+
+        // If you use libGDX iterator with while can be implemented in earlier way.
         obstaclePool.freeAll(obstacles);
         obstacles.clear();
         gameStage.clear();

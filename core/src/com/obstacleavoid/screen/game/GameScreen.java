@@ -268,7 +268,12 @@ public class GameScreen extends ScreenAdapter {
     // Game Logic (Now mixed in with rendering class);
 
     private void restart() {
+        // remove obstacles from their parent (stage):
+        for(ObstacleActor ob: obstacles)
+            ob.remove();
+        // then freeAll obstacles from pool
         obstaclePool.freeAll(obstacles);
+        // finally clear obstacles
         obstacles.clear();
         player.setPosition(startPlayerX, startPlayerY);
 

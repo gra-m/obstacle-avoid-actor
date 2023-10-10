@@ -73,6 +73,7 @@ public class GameScreen extends ScreenAdapter {
     private final Array<ObstacleActor> obstacles = new Array<>();
     private ObstacleActor obstacle;
     private PlayerActor player;
+    private Image backgroundImage;
 
     // 19 fields!
 
@@ -104,14 +105,14 @@ public class GameScreen extends ScreenAdapter {
         obstacleRegion = gamePlayAtlas.findRegion(RegionNames.OBSTACLE);
         backgroundRegion = gamePlayAtlas.findRegion(RegionNames.BACKGROUND);
 
-        Image background = new Image(backgroundRegion);
-        background.setSize(GameConfig.WORLD_WIDTH, GameConfig.WORLD_HEIGHT);
+        backgroundImage = new Image(backgroundRegion);
+        backgroundImage.setSize(GameConfig.WORLD_WIDTH, GameConfig.WORLD_HEIGHT);
 
         // Player Actor
         player = new PlayerActor();
         player.setRegion(gamePlayAtlas.findRegion(RegionNames.PLAYER));
         player.setPosition(startPlayerX, startPlayerY);
-        gameStage.addActor(background);
+        gameStage.addActor(backgroundImage);
         gameStage.addActor(player);
     }
 
@@ -268,18 +269,11 @@ public class GameScreen extends ScreenAdapter {
     // Game Logic (Now mixed in with rendering class);
 
     private void restart() {
-        // thinking about it, his way achieves everything with only ONE loop, I suspect more than one used
-        // eg. with freeAll:
-        for (int i = 0; i > obstacles.size; i ++) {
-            ObstacleActor obA = obstacles.get(i);
-            //remove from parent == stage but not immediate
-            //obA.remove();
-            //So:
-            gameStage.getActors().removeValue(obA, true);
-            //free given obstacle from pool
-            obstaclePool.free(obA);
-            obstacles.removeIndex(i);
-        }
+        obstaclePool.freeAll(obstacles);
+        obstacles.clear();
+        gameStage.clear();
+        gameStage.addActor(backgroundImage);
+        gameStage.addActor(player);
 
         player.setPosition(startPlayerX, startPlayerY);
 

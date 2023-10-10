@@ -60,6 +60,7 @@ public class GameScreen extends ScreenAdapter {
 
    private TextureAtlas gamePlayAtlas;
    private TextureRegion obstacleRegion;
+   private TextureRegion backgroundRegion;
 
    private DebugCameraController debugCameraController;
 
@@ -95,6 +96,7 @@ public class GameScreen extends ScreenAdapter {
         debugCameraController = new DebugCameraController();
         debugCameraController.setStartPosition(GameConfig.WORLD_CENTER_X, GameConfig.WORLD_CENTER_Y);
         obstacleRegion = gamePlayAtlas.findRegion(RegionNames.OBSTACLE);
+        backgroundRegion = gamePlayAtlas.findRegion(RegionNames.BACKGROUND);
         // Actors
         player = new PlayerActor();
         player.setRegion(gamePlayAtlas.findRegion(RegionNames.PLAYER));
@@ -201,18 +203,17 @@ public class GameScreen extends ScreenAdapter {
 
         batch.begin();
 
-        drawGamePlay();
+        //RENDER CALL 01:
+        batch.draw(backgroundRegion, 0, 0, GameConfig.WORLD_WIDTH, GameConfig.WORLD_HEIGHT);
 
         batch.end();
 
-        // Stage calls its own begin/end automatically.
+        // RENDER CALL 02: Stage calls its own begin/end automatically player and obstacles added to stage are added here
         gameStage.act();
         gameStage.draw();
 
     }
 
-    private void drawGamePlay() {
-    }
 
     private void renderUi() {
         batch.setProjectionMatrix(uiCamera.combined);

@@ -15,6 +15,7 @@ public class PlayerActor extends ActorBase{
     public PlayerActor() {
         setCollisionRadius(GameConfig.PLAYER_BOUNDS_RADIUS);
         setSize(GameConfig.PLAYER_SIZE, GameConfig.PLAYER_SIZE);
+        setDebug(false);
     }
 
     @Override

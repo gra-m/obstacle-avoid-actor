@@ -31,6 +31,7 @@ import com.obstacleavoid.config.GameConfig;
 import com.obstacleavoid.config.GameDifficulty;
 import com.obstacleavoid.entity.ObstacleActor;
 import com.obstacleavoid.entity.PlayerActor;
+import com.obstacleavoid.screen.menu.MenuScreen;
 import com.obstacleavoid.util.GdxUtils;
 import com.obstacleavoid.util.ViewportUtils;
 import com.obstacleavoid.util.debug.DebugCameraController;
@@ -57,7 +58,6 @@ public class GameScreen extends ScreenAdapter {
     private int lives = GameConfig.PLAYER_INITIAL_LIVES;
     private int score;
     private int displayScore;
-    private Sound hitSound;
 
     private float startPlayerX = (GameConfig.WORLD_WIDTH - GameConfig.PLAYER_SIZE) / 2f;
     private float startPlayerY = GameConfig.PLAYER_SIZE / 2f;
@@ -146,8 +146,6 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void update(float delta) {
-        createNewObstacleAddToStage(delta);
-        removePassedObstacles();
 
         if (isPlayerCollidingWithObstacle(player)) {
             LOG.debug("Collision detected");
@@ -156,6 +154,7 @@ public class GameScreen extends ScreenAdapter {
             if (isGameOver()) {
                 LOG.debug("Game Over");
                 GameManager.INSTANCE.updateHighScore(score);
+                game.setScreen(new MenuScreen(game));
             } else {
                 restart();
             }
@@ -165,6 +164,9 @@ public class GameScreen extends ScreenAdapter {
             updateScore(delta);
             updateDisplayScore(delta);
         }
+
+        createNewObstacleAddToStage(delta);
+        removePassedObstacles();
     }
 
     private void removePassedObstacles() {

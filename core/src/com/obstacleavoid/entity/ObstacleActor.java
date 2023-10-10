@@ -12,6 +12,7 @@ public class ObstacleActor extends ActorBase implements Pool.Poolable {
     public ObstacleActor(){
         setCollisionRadius(GameConfig.OBSTACLE_BOUNDS_RADIUS);
         setSize(GameConfig.OBSTACLE_SIZE, GameConfig.OBSTACLE_SIZE);
+        setDebug(false);
     }
 
     @Override

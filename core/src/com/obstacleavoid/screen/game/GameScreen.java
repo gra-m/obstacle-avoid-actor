@@ -2,6 +2,7 @@ package com.obstacleavoid.screen.game;
 
 
 import static com.obstacleavoid.config.GameConfig.OBSTACLE_SIZE;
+import static com.obstacleavoid.config.GameConfig.PLAYER_SCORES_AFTER;
 
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.assets.AssetManager;
@@ -17,6 +18,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Logger;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -38,45 +40,48 @@ import com.obstacleavoid.util.debug.DebugCameraController;
 (formerly GameRenderer)  and control (formerlyGameController) meaning this can be a v large class..
  */
 public class GameScreen extends ScreenAdapter {
-   private final ObstacleAvoidGame game;
-   private AssetManager assetManager;
-   private final SpriteBatch batch;
-   private final GlyphLayout layout = new GlyphLayout();
-   private OrthographicCamera camera;
-   private Viewport viewport;
-   private Stage gameStage;
-   private ShapeRenderer renderer;
-   private OrthographicCamera uiCamera;
-   private Viewport uiViewport;
-   private BitmapFont font;
-   private float obstacleTimer;
-   private float scoreTimer;
-   private int lives = GameConfig.PLAYER_INITIAL_LIVES;
-   private int score;
-   private int displayScore;
-   private Sound hitSound;
+    private static final Logger LOG = new Logger(GameScreen.class.getName(),Logger.DEBUG);
+    private final ObstacleAvoidGame game;
+    private AssetManager assetManager;
+    private final SpriteBatch batch;
+    private final GlyphLayout layout = new GlyphLayout();
+    private OrthographicCamera camera;
+    private Viewport viewport;
+    private Stage gameStage;
+    private ShapeRenderer renderer;
+    private OrthographicCamera uiCamera;
+    private Viewport uiViewport;
+    private BitmapFont font;
+    private float obstacleTimer;
+    private float scoreTimer;
+    private int lives = GameConfig.PLAYER_INITIAL_LIVES;
+    private int score;
+    private int displayScore;
+    private Sound hitSound;
 
-   private float startPlayerX = (GameConfig.WORLD_WIDTH - GameConfig.PLAYER_SIZE) / 2f;
-   private float startPlayerY = GameConfig.PLAYER_SIZE / 2f;
+    private float startPlayerX = (GameConfig.WORLD_WIDTH - GameConfig.PLAYER_SIZE) / 2f;
+    private float startPlayerY = GameConfig.PLAYER_SIZE / 2f;
 
-   private TextureAtlas gamePlayAtlas;
-   private TextureRegion obstacleRegion;
-   private TextureRegion backgroundRegion;
+    private TextureAtlas gamePlayAtlas;
+    private TextureRegion obstacleRegion;
+    private TextureRegion backgroundRegion;
+    private Sound crashSound;
 
-   private DebugCameraController debugCameraController;
+    private DebugCameraController debugCameraController;
 
-   private Pool<ObstacleActor> obstaclePool = Pools.get(ObstacleActor.class);
-   private final Array<ObstacleActor> obstacles = new Array<>();
-   private ObstacleActor obstacle;
-   private PlayerActor player;
+    private Pool<ObstacleActor> obstaclePool = Pools.get(ObstacleActor.class);
+    private final Array<ObstacleActor> obstacles = new Array<>();
+    private ObstacleActor obstacle;
+    private PlayerActor player;
 
-   // 19 fields!
+    // 19 fields!
 
     public GameScreen(ObstacleAvoidGame game) {
         this.game = game;
         this.assetManager = game.getAssetManager();
         this.gamePlayAtlas = assetManager.get(AssetDescriptors.GAMEPLAY_ATlAS);
         this.font = assetManager.get(AssetDescriptors.UI_FONT_32);
+        this.crashSound = assetManager.get(AssetDescriptors.CRASH_WAV);
         this.batch = game.getSpriteBatch();
     }
 
@@ -102,7 +107,6 @@ public class GameScreen extends ScreenAdapter {
         Image background = new Image(backgroundRegion);
         background.setSize(GameConfig.WORLD_WIDTH, GameConfig.WORLD_HEIGHT);
 
-        //
         // Player Actor
         player = new PlayerActor();
         player.setRegion(gamePlayAtlas.findRegion(RegionNames.PLAYER));
@@ -141,20 +145,35 @@ public class GameScreen extends ScreenAdapter {
 
     }
 
-    private void update( float delta )
-    {
-        createNewObstacleAddToStage( delta );
+    private void update(float delta) {
+        createNewObstacleAddToStage(delta);
         removePassedObstacles();
+
+        if (isPlayerCollidingWithObstacle(player)) {
+            LOG.debug("Collision detected");
+            crashSound.play();
+            lives--;
+            if (isGameOver()) {
+                LOG.debug("Game Over");
+                GameManager.INSTANCE.updateHighScore(score);
+            } else {
+                restart();
+            }
+        }
+
+        if (!isGameOver()) {
+            updateScore(delta);
+            updateDisplayScore(delta);
+        }
     }
 
-    private void removePassedObstacles( )
-    {
-        if ( obstacles.size > 0 ) {
-            ObstacleActor first = obstacles.first( );
+    private void removePassedObstacles() {
+        if (obstacles.size > 0) {
+            ObstacleActor first = obstacles.first();
 
-            float minY = -first.getWidth( );
+            float minY = -first.getWidth();
 
-            if ( first.getY( ) <= minY ) {
+            if (first.getY() <= minY) {
                 obstacles.removeValue(first, true);
 
                 // removes any actor from its parent
@@ -165,24 +184,23 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
-    private void createNewObstacleAddToStage(float delta )
-    {
+    private void createNewObstacleAddToStage(float delta) {
         obstacleTimer += delta;
 
-        if ( obstacleTimer >= GameConfig.OBSTACLES_SPAWN_EVERY ) {
+        if (obstacleTimer >= GameConfig.OBSTACLES_SPAWN_EVERY) {
             float min = 0;
             float max = GameConfig.WORLD_WIDTH - OBSTACLE_SIZE;
-            float obstacleX = MathUtils.random( min, max );
+            float obstacleX = MathUtils.random(min, max);
 
             float obstacleY = GameConfig.WORLD_HEIGHT;
 
             ObstacleActor obstacle = obstaclePool.obtain();
-            GameDifficulty difficultyLevel = GameManager.INSTANCE.getGameDifficulty( );
+            GameDifficulty difficultyLevel = GameManager.INSTANCE.getGameDifficulty();
             obstacle.setYSpeed(difficultyLevel.getObjectSpeed());
-            obstacle.setPosition( obstacleX, obstacleY );
+            obstacle.setPosition(obstacleX, obstacleY);
             obstacle.setRegion(obstacleRegion);
 
-            obstacles.add( obstacle );
+            obstacles.add(obstacle);
             gameStage.addActor(obstacle);
             obstacleTimer = 0f;
         }
@@ -201,7 +219,7 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
-       batch.dispose();
+        batch.dispose();
     }
 
     // private
@@ -221,15 +239,15 @@ public class GameScreen extends ScreenAdapter {
         batch.begin();
 
         //create LIVES text
-        String livesText = "LIVES " +  lives;
+        String livesText = "LIVES " + lives;
         //add text to layout
-        layout.setText(font,livesText);
+        layout.setText(font, livesText);
         // use BitMapFont to draw itself with a SpriteBatch and layout and position from bottom left
-        font.draw(batch, layout, GameConfig.HUD_PADDING , GameConfig.HUD_HEIGHT - layout.height);
+        font.draw(batch, layout, GameConfig.HUD_PADDING, GameConfig.HUD_HEIGHT - layout.height);
 
 
         //create SCORE text
-        String scoreText = "SCORE " +  score;
+        String scoreText = "SCORE " + score;
         //add text to layout
         layout.setText(font, scoreText);
         // use BitMapFont to draw itself with a SpriteBatch and layout and position from bottom left
@@ -238,21 +256,50 @@ public class GameScreen extends ScreenAdapter {
 
         batch.end();
 
-
     }
+
     private void renderDebug() {
-        renderer.setProjectionMatrix(camera.combined);
-        renderer.begin(ShapeRenderer.ShapeType.Line);
-
-        drawDebug();
-        renderer.end();
-
         ViewportUtils.drawGrid(viewport, renderer);
 
     }
 
-    private void drawDebug() {
+    // Game Logic (Now mixed in with rendering class);
+
+    private void restart() {
+        obstaclePool.freeAll(obstacles);
+        obstacles.clear();
+        player.setPosition(startPlayerX, startPlayerY);
+
     }
 
+    public boolean isGameOver() {
+        return lives <= 0;
+    }
+
+    private void updateScore( float delta ) {
+        scoreTimer += delta;
+
+        if (scoreTimer >= PLAYER_SCORES_AFTER ) {
+            score += MathUtils.random( 1, 5 );
+            scoreTimer = 0.0f;
+        }
+    }
+
+    private void updateDisplayScore( float delta ) {
+        if (displayScore < score) {
+            displayScore =  Math.min( score,  displayScore + (int) (80 * delta) );
+        }
+    }
+
+    private boolean isPlayerCollidingWithObstacle( PlayerActor player )
+    {
+
+        for ( ObstacleActor ob : obstacles ) {
+            if ( ob.notHitAlready() && ob.isPlayerColliding( player ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

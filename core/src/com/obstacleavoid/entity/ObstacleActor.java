@@ -31,6 +31,12 @@ public class ObstacleActor extends ActorBase implements Pool.Poolable {
 
         return hitAlready;
     }
+
+    public boolean notHitAlready() {
+        if (this.hitAlready == false)
+            return true;
+        return false;
+    }
     @Override
     public void reset() {
         setRegion(null);

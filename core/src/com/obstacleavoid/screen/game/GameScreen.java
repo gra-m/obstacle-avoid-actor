@@ -268,13 +268,17 @@ public class GameScreen extends ScreenAdapter {
     // Game Logic (Now mixed in with rendering class);
 
     private void restart() {
-        // remove obstacles from their parent (stage):
-        for(ObstacleActor ob: obstacles)
-            ob.remove();
-        // then freeAll obstacles from pool
-        obstaclePool.freeAll(obstacles);
-        // finally clear obstacles
-        obstacles.clear();
+        // thinking about it, his way achieves everything with only ONE loop, I suspect more than one used
+        // eg. with freeAll:
+        for (int i = 0; i > obstacles.size; i ++) {
+            ObstacleActor obA = obstacles.get(i);
+            //remove from parent == stage
+            obA.remove();
+            //free given obstacle from pool
+            obstaclePool.free(obA);
+            obstacles.removeIndex(i);
+        }
+
         player.setPosition(startPlayerX, startPlayerY);
 
     }

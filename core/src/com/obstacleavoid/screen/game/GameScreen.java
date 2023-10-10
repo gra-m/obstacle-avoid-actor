@@ -178,7 +178,7 @@ public class GameScreen extends ScreenAdapter {
             if (first.getY() <= minY) {
                 obstacles.removeValue(first, true);
 
-                // removes any actor from its parent
+                // removes any actor from its parent BUT not immediate
                 first.remove();
                 // return to pool
                 obstaclePool.free(first);
@@ -272,8 +272,10 @@ public class GameScreen extends ScreenAdapter {
         // eg. with freeAll:
         for (int i = 0; i > obstacles.size; i ++) {
             ObstacleActor obA = obstacles.get(i);
-            //remove from parent == stage
-            obA.remove();
+            //remove from parent == stage but not immediate
+            //obA.remove();
+            //So:
+            gameStage.getActors().removeValue(obA, true);
             //free given obstacle from pool
             obstaclePool.free(obA);
             obstacles.removeIndex(i);
